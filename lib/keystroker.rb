@@ -74,10 +74,69 @@ class Keystroker
   end
 
   def to_hg0()
+    
+    a = []
+
+    @doc.root.each_recursive do |x|
+
+      if @debug then
+        puts ('x:' + x.inspect).debug
+        puts ('x2: ' + x.next_sibling.inspect).debug
+      end
+      
+      next unless x
+      
+      if x.name == 'type' then
+        a << ' ' + x.text
+      else
+        instruction = x.name
+        instruction += '+' + x.attributes[:key] if x.attributes[:key]
+        a << ' {' + instruction + '}'
+      end
+
+    end
+    
+    a.join.lstrip
+    
   end
 
   def to_kbml(options={})
     @doc.xml(options)
+  end
+  
+  def to_vbs()
+    
+    a = []
+
+    @doc.root.each_recursive do |x|
+
+      next unless x
+
+      if x.name == 'type' then
+        a << ''
+        a << %Q(WshShell.SendKeys "%s") % x.text
+      else
+
+        modifiers = {ctrl: '^', shift: '+', alt: '%'}
+
+        instruction = if modifiers[x.name.to_sym] then
+          modifiers[x.name.to_sym]
+        else
+          "{%s}" % x.name.upcase
+        end
+
+        if x.attributes[:key] then
+          instruction += '{' + x.attributes[:key] + '}'
+        end
+
+        a << %Q(WshShell.SendKeys "%s") % instruction
+        a << '' if x.name == 'enter'
+      end
+
+    end
+    
+    a.prepend('Set WshShell = WScript.CreateObject("WScript.Shell")' + "\n")
+    puts a.join("\n")    
   end
 
 end
