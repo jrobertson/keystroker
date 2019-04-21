@@ -19,10 +19,15 @@ require 'rexle-builder'
 class Keystroker
   using ColouredText
   
-  def initialize(debug: false)
+  def initialize(kbml='<kbml/>', debug: false)
+    
     @debug = debug
+    
+    if kbml then
+      @doc = Rexle.new(RXFHelper.read(kbml).first)
+    end
   end
-
+  
   def parse_hg0(s)
 
     xml = RexleBuilder.new
@@ -71,6 +76,40 @@ class Keystroker
 
     @doc = Rexle.new(a3)
 
+  end
+  
+  def to_au3()
+
+    a = []
+
+    @doc.root.each_recursive do |x|
+
+      next unless x
+
+      if x.name == 'type' then
+        a << ''
+        a << %Q{Send("%s")} % x.text
+      else
+
+        modifiers = {ctrl: '^', shift: '+', alt: '!', win: '#'}
+
+        instruction = if modifiers[x.name.to_sym] then
+          modifiers[x.name.to_sym]
+        else
+          "{%s}" % x.name.upcase
+        end
+
+        if x.attributes[:key] then
+          instruction += '' + x.attributes[:key] + ''
+        end
+
+        a << %Q{Send("%s")} % instruction
+        a << '' if x.name == 'enter'
+      end
+
+    end
+    
+    puts a.join("\n")      
   end
 
   def to_hg0()
