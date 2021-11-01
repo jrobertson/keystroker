@@ -99,11 +99,21 @@ class Keystroker
     
     a = s.strip.lines.map do |line|
 
-      head, body = line.split(/ +/,2)
+      head, rawbody = line.chomp.split(/ +/,2)
+      body = rawbody ? rawbody.strip : nil
+      puts 'head: ' + head.inspect if @debug
 
       case head.to_sym
       when :activate
         [:window, {activate: body}]
+      when :enter
+        [:enter, {}]
+      when :sleep
+        [:sleep, {duration: body}]                
+      when :tab
+        [:tab, {times: body}]
+      when :type
+        [:type, {}, body]                
       end
 
     end

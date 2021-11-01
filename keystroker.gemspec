@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'keystroker'
-  s.version = '0.3.0'
+  s.version = '0.3.1'
   s.summary = 'Makes it easier to convert keystrokes from 1 format to ' + 
       'another. Primary format is KBML.'
   s.authors = ['James Robertson']
