@@ -23,9 +23,24 @@ class Keystroker
     
     @debug = debug
     
-    if kbml then
-      @doc = Rexle.new(RXFHelper.read(kbml).first)
+    @doc = if kbml then
+    
+      s, _ = RXFHelper.read(kbml)
+            
+      head, body = s.lines[0].chomp, s.lines[1..-1].join
+      puts 'head:' + head.inspect if @debug
+      
+      case head
+      when /<\?kbml\?\>/
+        parse_slim(body)
+      when /<\?hg0\?\>/
+        parse_hg0(body)
+      else
+        Rexle.new(s)
+      end
+      
     end
+    
   end
   
   def parse_hg0(s)
@@ -78,6 +93,27 @@ class Keystroker
 
   end
   
+  def parse_slim(s)    
+    
+    puts 'inside parse_slim' if @debug
+    
+    a = s.strip.lines.map do |line|
+
+      head, body = line.split(/ +/,2)
+
+      case head.to_sym
+      when :activate
+        [:window, {activate: body}]
+      end
+
+    end
+    
+    rawxml = ['kbml', {}, '', *a]
+
+    @doc = Rexle.new(rawxml)
+
+  end
+  
   def to_au3()
 
     a = []
@@ -110,6 +146,10 @@ class Keystroker
     end
     
     puts a.join("\n")      
+  end
+  
+  def to_doc()
+    @doc
   end
 
   def to_hg0()
